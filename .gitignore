@@ -1,0 +1,10 @@
+# OS / editor cruft
+.DS_Store
+*.swp
+*~
+
+# Local secrets — never commit these even if they end up in this tree
+*.key
+*.pem
+rclone.conf
+.env

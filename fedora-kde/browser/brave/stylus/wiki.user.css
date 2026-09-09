@@ -1,0 +1,199 @@
+/* ==UserStyle==
+@name         Sandy Wikipedia
+@version      20260908.01.00
+@namespace    https://userstyles.world/user/Tsuni
+@description  Warm "sand" color scheme with Atkinson Hyperlegible typography and a floating card layout for Wikipedia. Full dark mode support, CSS-only collapsible References section. Originally created by Tsuni; substantially rewritten, redesigned, and bug-fixed by Akshay Abraham.
+@author       Akshay Abraham (original concept by Tsuni <tsuni@tsuni.dev>)
+@license      MIT
+==/UserStyle== */
+
+/* ----------------------------------------------------------------------
+ * Changelog — Akshay Abraham's fork of Tsuni's original "Sandy Wikipedia"
+ * ----------------------------------------------------------------------
+ * - Dark mode: full support keyed off Wikipedia's own theme system
+ *   (`skin-theme-clientpref-night` / `prefers-color-scheme: dark`), so
+ *   the sand palette inverts to a muted dusk/espresso tone alongside
+ *   MediaWiki's native dark-mode text/link/table recoloring, instead of
+ *   fighting it.
+ * - Typography: switched body + heading fonts to Atkinson Hyperlegible.
+ * - Redesign: reworked the page into a floating "card" (rounded corners,
+ *   soft shadow, inset border on infoboxes/tables) instead of a flat
+ *   background swap.
+ * - New feature: CSS-only collapsible References section — hover to
+ *   peek, or click a footnote / TOC entry to :target-expand it. Pure
+ *   :hover + :has(:target), since Stylus styles can't run JS.
+ * - TOC restyle: weight/size hierarchy between levels, active-item
+ *   highlight tied to --color-progressive.
+ * - Bugfix: unbounded horizontal scroll. The card's background/shadow
+ *   layer (`.mw-body::before`) intentionally bleeds outside `.mw-body`
+ *   via a negative `inset`, but nothing clipped that bleed — it leaked
+ *   into the document's real scrollable width, so scrolling sideways
+ *   dropped you into empty, same-colored space that felt endless.
+ *   Contained now with `overflow-x: clip` on `.mw-page-container`.
+ * ----------------------------------------------------------------------
+ */
+
+@-moz-document domain("en.wikipedia.org") {
+    @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+    @media screen {
+        :root {
+            /* light (default) palette */
+            --background-color-base: #f4eeeb;
+            --background-color-neutral-subtle: #ebe5dd;
+            --sandy-card-shadow: 0 0 30px #0001;
+            --sandy-toc-base: #000a;
+            --sandy-toc-strong: #000;
+            --sandy-infobox-border: #a2a9b1;
+            --sandy-ref-chevron: #0007;
+        }
+
+        /* ---- Dark palette ----
+           Same warm, low-saturation "sand" personality, just inverted into a
+           dusk/espresso tone instead of straight black — kept muted on purpose
+           so it doesn't turn into a flashy pure-black/pure-white theme.
+           This only activates through Wikipedia's OWN theme system (the classes
+           below live on <html>), so MediaWiki's own dark-mode text/link/table
+           recoloring is guaranteed to be active at the same time as ours —
+           we're layering the accent colors, not fighting the whole page.
+           One-time setup on your end: open the Appearance panel (the little
+           "A" icon near the article title) and set Color to "Automatic" or
+           "Dark". After that it's genuinely the default — no repeat action. */
+        html.skin-theme-clientpref-night {
+            --background-color-base: #1c1713;
+            --background-color-neutral-subtle: #242019;
+            --sandy-card-shadow: 0 0 40px #0008, inset 0 1px 0 #ffffff12;
+            --sandy-toc-base: #e8ded2a6;
+            --sandy-toc-strong: #e8ded2;
+            --sandy-infobox-border: #5b5349;
+            --sandy-ref-chevron: #e8ded299;
+        }
+        @media (prefers-color-scheme: dark) {
+            html.skin-theme-clientpref-os {
+                --background-color-base: #1c1713;
+                --background-color-neutral-subtle: #242019;
+                --sandy-card-shadow: 0 0 40px #0008, inset 0 1px 0 #ffffff12;
+                --sandy-toc-base: #e8ded2a6;
+                --sandy-toc-strong: #e8ded2;
+                --sandy-infobox-border: #5b5349;
+                --sandy-ref-chevron: #e8ded299;
+            }
+        }
+
+        .mw-page-container,
+        .vector-header-container .mw-header,
+        .vector-pinned-container,
+        .vector-sticky-pinned-container::after {
+            background: none;
+        }
+
+        /* Bugfix: contain the card's decorative bleed (see .mw-body::before)
+           so it can never become real page-level horizontal scroll. Only
+           overflow-x is touched, so vertical scrolling and any descendant's
+           own local overflow-x:auto (e.g. wide tables) are unaffected. */
+        .mw-page-container {
+            overflow-x: clip;
+        }
+
+        .mw-body {
+            position: relative;
+        }
+        .mw-body::before {
+            content: '';
+            position: absolute;
+            grid-column: 1 / 1;
+            grid-row: 1 / -1;
+            inset: -1rem;
+            top: -0.3rem;
+            background: var(--background-color-base);
+            border-radius: 0.5rem;
+            box-shadow: var(--sandy-card-shadow);
+        }
+        .mw-body h1,
+        .mw-body .mw-heading1,
+        .mw-body-content h1,
+        .mw-body-content .mw-heading1,
+        .mw-body-content h2,
+        .mw-body-content .mw-heading2 {
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            font-weight: 700; /* Atkinson only ships 400/700, no 500 */
+        }
+        body {
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            font-weight: 400;
+        }
+        .infobox, table {
+            border-radius: 0.5rem;
+            border: none;
+            position: relative;
+        }
+
+        .infobox::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--sandy-infobox-border);
+            border-radius: 0.5rem;
+        }
+
+        .mw-parser-output th:first-of-type {
+            border-top: none;
+        }
+        .vector-toc {
+            .vector-toc-text {
+                padding: 3px 0;
+            }
+            .vector-toc-list-item > .vector-toc-link {
+                color: var(--sandy-toc-base);
+                transition: color 0.2s, font-weight 0.2s !important;
+            }
+            .vector-toc-level-1 > .vector-toc-link {
+                color: var(--sandy-toc-strong);
+                font-weight: 600;
+                font-size: 1.1em;
+            }
+            .vector-toc-list-item-active > .vector-toc-link,
+            .vector-toc-level-1-active:not(.vector-toc-list-item-expanded) > .vector-toc-link
+            {
+                --color-base: var(--color-progressive);
+                font-weight: bolder;
+            }
+
+        }
+
+        /* ---- Collapsible References ----
+           Stylus is CSS-only — there's no JS, so a genuine click-to-toggle
+           dropdown isn't possible. This fakes it two ways instead:
+           1) :hover on the whole section — mouse over "References" to peek.
+           2) :has(:target) — clicking a footnote number like [1], or the
+              "References" TOC entry, jumps to an anchor inside this section
+              and auto-expands it (a hidden, zero-height target can't be
+              scrolled to otherwise). Needs :has() support — fine on any
+              current Firefox/Chromium (Zen, Brave). */
+        section[aria-labelledby="References"] > .mw-heading2 {
+            cursor: pointer;
+            user-select: none;
+        }
+        section[aria-labelledby="References"] > .mw-heading2 h2::after {
+            content: '▸';
+            display: inline-block;
+            margin-inline-start: 0.4em;
+            font-size: 0.7em;
+            color: var(--sandy-ref-chevron);
+            vertical-align: middle;
+            transition: transform 0.25s ease, color 0.2s ease;
+        }
+        section[aria-labelledby="References"]:hover > .mw-heading2 h2::after,
+        section[aria-labelledby="References"]:has(:target) > .mw-heading2 h2::after {
+            transform: rotate(90deg);
+        }
+        section[aria-labelledby="References"] .mw-references-wrap {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        section[aria-labelledby="References"]:hover .mw-references-wrap,
+        section[aria-labelledby="References"]:has(:target) .mw-references-wrap {
+            max-height: 6000px;
+        }
+    }
+}

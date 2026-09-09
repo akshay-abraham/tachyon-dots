@@ -1,0 +1,23 @@
+###
+#
+# Place this file inside: .local/share/applications/ folder in your home directory
+# This file should be called aduino.desktop
+# 
+# Make sure the path for Exec and Icon is correct
+#
+###
+
+[Desktop Entry]
+Version=1.0
+Name=Arduino IDE
+Comment=Write code and flash to Arduino hardware
+GenericName=Embedded electronics IDE
+Keywords=Programming;Development
+Exec=/home/akshay/Applications/arduino-ide_2.3.10_Linux_64bit.AppImage
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/akshay/Applications/Arduino_IDE_logo.svg
+Categories=GNOME;GTK;Development;Programming;
+MimeType=text/x-arduino;
+StartupNotify=true

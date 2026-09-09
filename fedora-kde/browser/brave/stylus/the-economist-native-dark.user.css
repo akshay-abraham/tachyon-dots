@@ -1,0 +1,332 @@
+/* ==UserStyle==
+@name           The Economist — Native Dark
+@namespace      github.com/openstyles/stylus
+@version        1.5.0
+@description    A restrained dark theme for The Economist that preserves its typography, imagery and brand red.
+@author         Akshay Abraham
+@license        MIT
+@preprocessor   default
+==/UserStyle== */
+
+@-moz-document regexp("^https?://(www\\.)?economist\\.com/(?!insider(?:/|$)).*") {
+  :root {
+    color-scheme: dark;
+
+    /* The Economist design tokens. Typography tokens are deliberately untouched. */
+    --mb-colour-greyscale-london-100: #171717;
+    --mb-colour-greyscale-london-95: #1e1e1e;
+    --mb-colour-greyscale-london-90: #292929;
+    --mb-colour-greyscale-london-85: #3a3a3a;
+    --mb-colour-greyscale-london-40: #b9b9b7;
+    --mb-colour-greyscale-london-35: #c9c9c6;
+    --mb-colour-greyscale-london-20: #e3e2de;
+    --mb-colour-greyscale-london-10: #eeeeea;
+    --mb-colour-greyscale-london-5: #f7f6f2;
+
+    /* Neutralised canvas tints retain section separation without light panels. */
+    --mb-colour-canvas-chicago-95: #202126;
+    --mb-colour-canvas-chicago-90: #292a31;
+    --mb-colour-canvas-chicago-85: #34353d;
+    --mb-colour-canvas-los-angeles-95: #24231f;
+    --mb-colour-canvas-los-angeles-90: #2d2c27;
+    --mb-colour-canvas-los-angeles-85: #393830;
+    --mb-colour-canvas-paris-95: #1f2525;
+    --mb-colour-canvas-paris-90: #292f2f;
+    --mb-colour-canvas-paris-85: #343d3d;
+    --mb-colour-canvas-red-95: #282020;
+    --mb-colour-canvas-red-90: #332727;
+    --mb-colour-canvas-red-85: #403030;
+    --mb-colour-canvas-singapore-95: #28221f;
+    --mb-colour-canvas-singapore-90: #332b27;
+    --mb-colour-canvas-singapore-85: #403630;
+
+    /* "Base" highlight tokens power topic/status call-out boxes (e.g. the
+       "Read the rest of our cover package" reading-list infobox on briefing
+       pages). Only the pale -95/-90 tints are remapped; the vivid -55/-65/-75
+       accent shades are left alone since they still read fine as icon/text
+       accents on the dark canvas. Fixing the token here is more durable than
+       chasing the component's hashed class name, which changes on every
+       Economist front-end deploy. */
+    --mb-colour-base-new-york-95: #2a2216;
+    --mb-colour-base-new-york-90: #372c1a;
+    --mb-colour-base-tokyo-95: #2a1e21;
+    --mb-colour-base-tokyo-90: #35242a;
+    --mb-colour-base-singapore-95: #282019;
+    --mb-colour-base-singapore-90: #332619;
+    --mb-colour-base-shanghai-95: #1c2417;
+    --mb-colour-base-shanghai-90: #24301c;
+    --mb-colour-base-hong-kong-95: #17241f;
+    --mb-colour-base-hong-kong-90: #1e3029;
+
+    /* Economist red tokens are intentionally not overridden. */
+
+    /* Blue interaction states: deep, legible blue rather than pale blue. */
+    --mb-colour-base-chicago-20: #d5ddff;
+    --mb-colour-base-chicago-30: #b7c5ff;
+    --mb-colour-base-chicago-45: #91a3fa;
+    --mb-colour-base-chicago-55: #8295ee;
+    --mb-colour-base-chicago-90: #29325c;
+    --mb-colour-base-chicago-95: #202746;
+
+    /* The legacy DS tokens power the For You and podcast page families. */
+    --ds-color-london-100: #171717;
+    --ds-color-london-95: #1e1e1e;
+    --ds-color-london-85: #3a3a3a;
+    --ds-color-london-70: #8f8f8c;
+    --ds-color-london-35: #c9c9c6;
+    --ds-color-london-20: #e3e2de;
+    --ds-color-london-10: #eeeeea;
+    --ds-color-london-5: #f7f6f2;
+    --ds-color-chicago-20: #d5ddff;
+    --ds-color-chicago-30: #b7c5ff;
+    --ds-color-chicago-45: #91a3fa;
+    --ds-color-chicago-55: #8295ee;
+    --ds-color-chicago-90: #29325c;
+    --ds-color-chicago-95: #202746;
+  }
+
+  html, body {
+    background: #171717 !important;
+    color: #f7f6f2;
+  }
+
+  /* Main shell, masthead, navigation drawer, search and account dialogues. */
+  [class*="masthead_"], [class*="header_"], [class*="navigation_"],
+  [class*="overlay_"], [class*="search_"], [class*="my-account_"],
+  dialog, [role="dialog"] {
+    --mb-masthead-colour-bg: #171717;
+    --mb-masthead-border: 1px solid #4a4a47;
+    --mb-masthead-border-light: 1px solid #353532;
+    background-color: #171717;
+    color: #f7f6f2;
+  }
+
+  /* Editorial reading surfaces, cards and programme modules. */
+  main, article, [class*="article_"], [class*="story_"], [class*="content_"],
+  [class*="teaser_"], [class*="card_"], [class*="collection_"],
+  [class*="section-header_"], [class*="podcast_"], [class*="audio_"] {
+    border-color: #484844;
+  }
+
+  [class*="card_"][class*="--background"], [class*="card_"][class*="--solid"],
+  [class*="teaser_"][class*="--background"], [class*="paywall_"],
+  [class*="newsletter_"], [class*="subscription_"], [class*="promo_"] {
+    background-color: #222220;
+    color: #f7f6f2;
+  }
+
+  /* Keep dark/inverse components legible after the base token remap. */
+  [class*="--inverse"] {
+    --mb-footer-colour-bg: #0f0f0f;
+    --mb-footer-colour-text: #f7f6f2;
+    --mb-link-colour-text: #f7f6f2;
+    --mb-link-colour-text-hover: #ffffff;
+    --mb-link-list-colour-text: #f7f6f2;
+    --mb-link-list-colour-title: #f7f6f2;
+    --mb-button-colour: #f7f6f2;
+    color: #f7f6f2;
+  }
+
+  footer, [class*="footer_"], [data-theme="dark"] {
+    --mb-footer-colour-bg: #0f0f0f;
+    --mb-footer-colour-text: #f7f6f2;
+    background-color: #0f0f0f;
+    color: #f7f6f2;
+  }
+
+  /* Lines, rules, data tables and article adornments. */
+  hr, [class*="rule_"], [class*="divider_"], [class*="border_"],
+  table, th, td, blockquote {
+    border-color: #4a4a46 !important;
+  }
+
+  blockquote {
+    background: #20201e;
+  }
+
+  /* For You contains explicit white feed cards outside the shared token system. */
+  [class*="feed_card__"] {
+    background-color: #20201e !important;
+    border-color: #4a4a46 !important;
+    color: #f7f6f2;
+  }
+
+  [class*="feed_mostReadItem__"] {
+    border-color: #4a4a46 !important;
+  }
+
+  /* Podcast pages use legacy design-system colours and need their own surface. */
+  .ds-podcast-card, [class*="ds-podcast-card"] {
+    background-color: #20201e !important;
+    color: #f7f6f2;
+  }
+
+  .ds-podcast-card :is(a, p, h1, h2, h3, h4),
+  [class*="ds-podcast-card"] :is(a, p, h1, h2, h3, h4) {
+    color: inherit;
+  }
+
+  /* Podcast programme headers supply a light, show-specific canvas directly.
+     Retain their layout and imagery, but give every show a reading-safe dark
+     header; the DS token remap above keeps its authored text and controls sane. */
+  .sc-1eb8533f-1 {
+    background-color: #24231f !important;
+  }
+
+  .sc-1eb8533f-1 .trailer-player {
+    color-scheme: dark;
+  }
+
+  /* 1843 article headers are intentionally black with a white 1843 mark. */
+  [data-testid="1843-theme"] {
+    --header-headline-color: #f7f6f2;
+    --header-rubric-color: #f7f6f2;
+    --header-section-color: #f7f6f2;
+    background-color: #0d0d0d !important;
+  }
+
+  /* Article infoboxes otherwise retain their hard-coded white canvas. */
+  aside[data-component="infobox"] {
+    background: #20201e !important;
+    border-color: #4a4a46 !important;
+    color: #f7f6f2 !important;
+  }
+
+  aside[data-component="infobox"] :is(p, a) {
+    color: #f7f6f2 !important;
+  }
+
+  /* AI Narrated retains its unmodified light-mode yellow treatment. */
+  .css-17cci3l > [class*="label_mb-label"],
+  .css-17cci3l > [class*="tooltip_"] > button {
+    --mb-label-colour-text: #111110;
+    color: #111110 !important;
+  }
+
+  .css-17cci3l > [class*="tooltip_"] > button svg path {
+    fill: #111110;
+  }
+
+  /* Existing homepage Insider promotion keeps its author-provided dark theme. */
+  [data-testid="insider-event"] {
+    --mb-colour-greyscale-london-100: #fff;
+    --mb-colour-greyscale-london-95: #f2f2f2;
+    --mb-colour-greyscale-london-85: #d9d9d9;
+    --mb-colour-greyscale-london-40: #666;
+    --mb-colour-greyscale-london-35: #595959;
+    --mb-colour-greyscale-london-20: #333;
+    --mb-colour-greyscale-london-10: #1a1a1a;
+    --mb-colour-greyscale-london-5: #0d0d0d;
+    --mb-colour-base-chicago-20: #141f52;
+    --mb-colour-base-chicago-30: #1f2e7a;
+    --mb-colour-base-chicago-45: #2e45b8;
+    --mb-colour-base-chicago-55: #475ed1;
+    --mb-colour-base-chicago-90: #d6dbf5;
+    --mb-colour-base-chicago-95: #ebedfa;
+  }
+
+  /* Interactive Briefing / analytics embeds. The chart-frame component is used
+     by data-led briefing articles; its labels, axis lines, tooltips, tables and
+     control bar need explicit colours because they are not MB-token based. */
+  .chart-frame, .chart-column, .ai2svelte-chart,
+  [class*="chart-frame"], [class*="chart-column"], [class*="ai2svelte-chart"],
+  [class*="analytics"], [class*="data-viz"], [class*="dataViz"] {
+    background-color: #20201e !important;
+    border-color: #4a4a46 !important;
+    color: #f7f6f2 !important;
+  }
+
+  .chart-frame :is(button, select, input), .ai2svelte-chart :is(button, select, input),
+  [class*="chart-frame"] :is(button, select, input),
+  [class*="analytics"] :is(button, select, input) {
+    background-color: #292927 !important;
+    border-color: #666660 !important;
+    color: #f7f6f2 !important;
+  }
+
+  .chart-frame :is(text, tspan), .ai2svelte-chart :is(text, tspan),
+  [class*="chart-frame"] :is(text, tspan), [class*="analytics"] :is(text, tspan) {
+    fill: #e3e2de !important;
+  }
+
+  .chart-frame [role="tooltip"], .ai2svelte-chart [role="tooltip"] {
+    background-color: #111110 !important;
+    border: 1px solid #5c5c57 !important;
+    color: #f7f6f2 !important;
+  }
+
+  /* Inputs and controls use familiar Economist contrast without changing type. */
+  input, textarea, select, [contenteditable="true"] {
+    background-color: #252523 !important;
+    border-color: #65655f !important;
+    color: #f7f6f2 !important;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #b9b9b5 !important;
+  }
+
+  button:not([class*="--primary"]):not([class*="--solid"]),
+  [role="button"]:not([class*="--primary"]):not([class*="--solid"]) {
+    border-color: #666660;
+  }
+
+  :focus-visible {
+    outline-color: #f7f6f2 !important;
+  }
+
+  ::selection {
+    background: #a80f0b;
+    color: #fff;
+  }
+
+  /* Playback, carousel, sharing and accordions: keep every interactive state
+     visible, without overriding the publisher's red action buttons. */
+  .video-js, .video-container, [class*="VideoPlayer"], [class*="videoPlayer"],
+  [class*="carousel"], [class*="Carousel"], [class*="accordion_"] {
+    background-color: #171717;
+    color: #f7f6f2;
+  }
+
+  .video-js :is(.vjs-control-bar, .vjs-menu-content),
+  [class*="carousel"] :is(button, [role="button"]),
+  [class*="accordion_"] :is(button, [role="button"]) {
+    background-color: #262624;
+    color: #f7f6f2;
+  }
+
+  .video-js :is(.vjs-slider, .vjs-volume-level, .vjs-play-progress),
+  [class*="carousel"] :is(button, [role="button"]),
+  [class*="accordion_"] :is(button, [role="button"]) {
+    border-color: #6a6a64;
+  }
+
+  [class*="share"], [class*="Share"] {
+    color: #f7f6f2;
+  }
+
+  /* Native dark scrollbars prevent bright strips in lengthy articles and feeds. */
+  * {
+    scrollbar-color: #6a6a64 #171717;
+  }
+
+  /* Third-party/account frames occasionally use white inline panels. */
+  iframe, [id*="zephr"], [class*="Zephr"], [class*="cmp"], [class*="cookie"] {
+    color-scheme: dark;
+  }
+
+  /* 1843 keeps its editorial identity; only the page chrome and pale modules darken. */
+  [data-identity="1843"] [class*="masthead_"],
+  [data-identity="1843"] [class*="footer_"] {
+    background-color: #171717;
+  }
+
+  /* Embedded Economist charts and video controls often paint their own canvas. */
+  [class*="chart_"] svg, [class*="graphic_"] svg {
+    color: #f7f6f2;
+  }
+
+  [class*="chart_"] text, [class*="graphic_"] text {
+    fill: #e3e2de;
+  }
+}

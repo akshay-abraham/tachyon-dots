@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Google Drive Sync
+Comment=Synchronize Google Drive now
+Exec=/home/akshay/bin/gdrive-sync
+Icon=/home/akshay/.local/share/icons/google-drive.svg
+Terminal=false
+Categories=Network;

@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+
+# gdrive-sync — Google Drive backup script for Fedora KDE
+# Syncs: Fleeting Notes + Projects → Google Drive
+# Safety: trash-based deletion (default rclone Drive behavior), max-delete guard
+# Logs: ~/.local/state/gdrive-sync/, auto-cleaned after 7 days
+
+set -euo pipefail
+
+# ── Config ────────────────────────────────────────────────────────────────────
+
+REMOTE="GDrive-Akshay:"
+NOTES_LOCAL="$HOME/Documents/Fedora-vault/1. Fleeting Notes"
+NOTES_REMOTE="${REMOTE}Fleeting Notes"
+PROJECTS_LOCAL="$HOME/Documents/Projects"
+PROJECTS_REMOTE="${REMOTE}Projects"
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+
+LOG_DIR="$HOME/.local/state/gdrive-sync"
+mkdir -p "$LOG_DIR"
+
+# Auto-clean logs and change reports older than 7 days
+find "$LOG_DIR" -type f \( -name "*.log" -o -name "changes-*.txt" \) -mtime +7 -delete
+
+LOG_FILE="$LOG_DIR/$(date +%F).log"
+CHANGES_FILE="$LOG_DIR/changes-$(date +%F-%H%M).txt"
+
+# All script output goes to log (systemd journal also captures service-level events)
+exec >>"$LOG_FILE" 2>&1
+
+log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*"; }
+
+# ── Lock ──────────────────────────────────────────────────────────────────────
+
+# XDG_RUNTIME_DIR: tmpfs, session-scoped, cleared on logout — correct place for locks
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/gdrive-sync.lock"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    notify-send --expire-time=4000 --icon=dialog-warning \
+        "Google Drive Sync" "Already running, skipping."
+    exit 0
+fi
+
+# ── Network check ─────────────────────────────────────────────────────────────
+
+# nm-online is correct on Fedora: talks to NetworkManager directly.
+# More reliable than ping, which can fail behind certain routers even when
+# internet is fully up.
+if ! nm-online -q --timeout=10; then
+    notify-send --expire-time=6000 --icon=network-offline \
+        "Google Drive Sync" "No network. Sync skipped."
+    log "Skipped: network not ready"
+    exit 0
+fi
+
+# ── Safety assertion ──────────────────────────────────────────────────────────
+
+# Verify use_trash is NOT disabled in rclone config.
+# If use_trash=false, deleted files are permanently gone — no Drive Trash recovery.
+# Default rclone Drive behavior sends deletions to Trash (30-day recovery window).
+if rclone config show GDrive-Akshay 2>/dev/null | grep -q "use_trash = false"; then
+    notify-send --urgency=critical --expire-time=0 --icon=dialog-error \
+        "Google Drive Sync — Safety Check Failed" \
+        "use_trash=false detected in rclone config.\nDeletions will be permanent.\nSync aborted."
+    log "ABORTED: use_trash=false detected. Deletions would be permanent."
+    exit 1
+fi
+
+# ── Sync ──────────────────────────────────────────────────────────────────────
+
+START_TIME=$(date +%s)
+notes_exit=0
+projects_exit=0
+
+log "=============================="
+log "Sync started"
+notify-send --expire-time=3000 --icon=folder-cloud \
+    "Google Drive Sync" "Starting..."
+
+# Shared rclone flags:
+# --fast-list        : fewer API calls (fine for personal Drive, not Team Drives)
+# --checksum         : compare by content hash, not just timestamps — more reliable
+# --stats=30s        : progress output in log every 30s (useful for debugging slow syncs)
+# --max-delete 50    : hard stop if >50 files would be deleted — accidental rm -rf guard
+# --combined         : compact per-file change report alongside verbose log
+# NOTE: --drive-use-trash is intentionally NOT set here, preserving the safe default (true)
+rclone_args=(
+    --checksum
+    --log-level INFO
+    --stats=30s
+    --max-delete 50
+    --combined "$CHANGES_FILE"
+)
+
+# Both syncs always run regardless of the other's result.
+# || var=$? captures exit code without triggering set -e abort.
+rclone sync "$NOTES_LOCAL"    "$NOTES_REMOTE"    "${rclone_args[@]}" || notes_exit=$?
+rclone sync "$PROJECTS_LOCAL" "$PROJECTS_REMOTE" "${rclone_args[@]}" || projects_exit=$?
+
+DURATION=$(( $(date +%s) - START_TIME ))
+
+# ── Exit code classification ───────────────────────────────────────────────────
+
+# Rclone exit codes (from official docs):
+#   0 — Success
+#   1 — Syntax or usage error
+#   2 — Error not otherwise categorised
+#   3 — Directory not found
+#   4 — File not found
+#   5 — Temporary error (network blip etc.) — likely self-resolves next run
+#   6 — Less serious errors (e.g. some files not transferred)
+#   7 — Fatal error
+#   8 — Transfer limit exceeded
+#   9 — Max delete threshold reached (our --max-delete guard tripped)
+
+classify_exit() {
+    case "$1" in
+        0) echo "✓" ;;
+        5) echo "⚠" ;;   # temporary, will likely self-resolve
+        9) echo "🛑" ;;  # deletion guard tripped — needs manual review
+        *) echo "✗" ;;   # fatal or unexpected
+    esac
+}
+
+notes_icon=$(classify_exit "$notes_exit")
+proj_icon=$(classify_exit  "$projects_exit")
+
+notes_label="${notes_icon} Notes"
+proj_label="${proj_icon} Projects"
+
+log "$notes_label (exit $notes_exit)"
+log "$proj_label (exit $projects_exit)"
+log "Duration: ${DURATION}s"
+log "Changes: $CHANGES_FILE"
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+if [[ $notes_exit -eq 0 && $projects_exit -eq 0 ]]; then
+    # Success: auto-dismisses after 5s, not intrusive
+    notify-send --expire-time=5000 --icon=folder-cloud \
+        "Google Drive Sync" "${notes_label}\n${proj_label}\n${DURATION}s"
+
+elif [[ $notes_exit -eq 9 || $projects_exit -eq 9 ]]; then
+    # Deletion guard: >50 files would have been deleted locally → propagation blocked.
+    # This needs deliberate user action. Notification stays until dismissed.
+    notify-send --urgency=critical --expire-time=0 --icon=dialog-error \
+        "Google Drive Sync — Deletion Guard Tripped" \
+        "${notes_label}\n${proj_label}\nMore than 50 files would be deleted.\nRun manually to confirm:\n  rclone sync ... --max-delete 9999"
+
+else
+    # Other failure: stays visible, points to log
+    notify-send --urgency=critical --expire-time=0 --icon=dialog-error \
+        "Google Drive Sync Failed" \
+        "${notes_label}\n${proj_label}\nCheck: $LOG_DIR/$(date +%F).log"
+fi
