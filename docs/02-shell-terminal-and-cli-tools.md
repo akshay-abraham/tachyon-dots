@@ -164,6 +164,7 @@ Manual trigger: symlink/copy `fedora-kde/desktop-entries/google-drive-sync.deskt
 git config --global user.name "Akshay Abraham"
 git config --global user.email "akshaykroobenabraham@gmail.com"
 git config --global core.editor "zed --wait"
+Zed keyboard shortcut: `Ctrl+Shift+~` — maximize terminal pane.
 git config --global init.defaultBranch main
 git config --global credential."https://github.com".helper "!/usr/bin/gh auth git-credential"
 git config --global credential."https://gist.github.com".helper "!/usr/bin/gh auth git-credential"
