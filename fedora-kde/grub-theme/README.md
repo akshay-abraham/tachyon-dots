@@ -1,6 +1,6 @@
 # catppuccin-mocha-grub-theme
 
-Catppuccin Mocha GRUB theme with the Dell logo swapped in (`logo.png`), based on the Vimix/Dracula-style GRUB2 gfxmenu themes.
+Catppuccin Mocha GRUB theme with the Dell logo swapped in (`logo.png`), based on the catppuccin mocha GRUB2 themes.
 
 ## Install
 
@@ -20,5 +20,3 @@ Regenerate the GRUB config:
 ```bash
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
-
-On UEFI systems the output path may instead be `/boot/efi/EFI/fedora/grub.cfg` — check which one applies with `sudo grub2-mkconfig -o` targeting the path `ls -la /boot/efi/EFI/fedora/` (if that exists) vs `/boot/grub2/`.
