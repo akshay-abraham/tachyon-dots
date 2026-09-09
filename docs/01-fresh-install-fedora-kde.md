@@ -49,7 +49,7 @@ gh extension install github/gh-copilot
 ## 5. Clone this repo
 
 ```bash
-gh repo clone <your-username>/tachyon-dots ~/tachyon-dots
+gh repo clone akshay-abraham/tachyon-dots ~/tachyon-dots
 cd ~/tachyon-dots
 ```
 

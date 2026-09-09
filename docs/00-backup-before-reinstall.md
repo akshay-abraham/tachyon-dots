@@ -17,8 +17,6 @@ The goal is a list of *what you chose to install*, not the thousands of dependen
 dnf repoquery --userinstalled > userinstalled-packages.txt
 ```
 
-Note: `dnf repolist --userinstalled` (repo list) is a different command from `dnf repoquery --userinstalled` (package list) — the second one is what you actually want here. Worth knowing the difference so you don't end up with a list of repo names instead of packages.
-
 ## 3. List of installed Flatpaks
 
 ```bash

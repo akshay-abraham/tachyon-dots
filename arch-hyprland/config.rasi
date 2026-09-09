@@ -1,0 +1,197 @@
+/* ~/.config/rofi/config.rasi
+ * Square, single-accent green theme (#5acb76 core, #2f9e58 deep).
+ *
+ * Why the old one had white patches: rofi falls back to its own compiled-in
+ * default theme for any widget you don't explicitly style — `*{}` does NOT
+ * cascade to every internal widget class in practice (scrollbar, the prompt's
+ * colon, the caps-lock indicator, and the "no results" message widget all
+ * have their own defaults that ignore the global block). This version styles
+ * every widget rofi actually instantiates, not just the obvious ones.
+ */
+
+configuration {
+    modi:                  "drun";
+    show-icons:            true;
+    drun-display-format:   "{name}";
+    font:                  "JetBrainsMono Nerd Font 11";
+    disable-history:       false;
+}
+
+* {
+    bg0:      #16161eee;
+    bg1:      #1a1b26ee;
+    bg2:      #22232f;
+    fg0:      #c9d1d9;
+    fg-dim:   #6e7681;
+    accent:   #5acb76;
+    accent2:  #2f9e58;
+    border:   #30363d;
+    urgent:   #f85149;
+
+    background-color: transparent;
+    text-color:        @fg0;
+}
+
+window {
+    background-color: @bg0;
+    border:            2px;
+    border-color:      @accent;
+    border-radius:     0px;
+    width:              480px;
+    location:           center;
+    padding:            0px;
+}
+
+mainbox {
+    background-color: transparent;
+    padding:  10px;
+    spacing:  8px;
+    children: [ inputbar, message, listview ];
+}
+
+inputbar {
+    background-color: @bg1;
+    border:            1px;
+    border-color:      @border;
+    border-radius:     0px;
+    padding:            8px 10px;
+    spacing:            6px;
+    children:           [ prompt, textbox-prompt-colon, entry, case-indicator ];
+}
+
+prompt {
+    background-color: transparent;
+    text-color:         @accent;
+}
+
+textbox-prompt-colon {
+    str:               ":";
+    background-color:  transparent;
+    text-color:         @accent;
+    expand:             false;
+    padding:            0px 4px 0px 0px;
+}
+
+entry {
+    background-color: transparent;
+    placeholder:       "Search…";
+    placeholder-color: @fg-dim;
+    text-color:         @fg0;
+}
+
+case-indicator {
+    background-color: transparent;
+    text-color:         @fg-dim;
+}
+
+message {
+    background-color: @bg1;
+    border:            0px 0px 1px 0px;
+    border-color:      @border;
+    padding:            6px 10px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:         @fg-dim;
+}
+
+listview {
+    background-color: transparent;
+    lines:              8;
+    columns:            1;
+    spacing:            2px;
+    padding:            2px 0px 0px 0px;
+    border:             0px;
+    fixed-height:       false;
+    scrollbar:          true;
+}
+
+scrollbar {
+    background-color: @bg1;
+    handle-color:       @accent2;
+    handle-width:       4px;
+    border:             0px;
+    border-radius:      0px;
+}
+
+element {
+    background-color: transparent;
+    text-color:         @fg0;
+    orientation:         horizontal;
+    padding:            6px 10px;
+    border-radius:      0px;
+    spacing:            8px;
+    cursor:             pointer;
+}
+
+element-icon {
+    size:    22px;
+    cursor:  inherit;
+}
+
+element-text {
+    text-color:         inherit;
+    vertical-align:     0.5;
+    horizontal-align:   0.0;
+    cursor:             inherit;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color:         @fg0;
+}
+
+element normal.urgent {
+    background-color: transparent;
+    text-color:         @urgent;
+}
+
+element normal.active {
+    background-color: transparent;
+    text-color:         @accent;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color:         @fg0;
+}
+
+element alternate.urgent {
+    background-color: transparent;
+    text-color:         @urgent;
+}
+
+element alternate.active {
+    background-color: transparent;
+    text-color:         @accent;
+}
+
+element selected.normal {
+    background-color: @bg1;
+    text-color:         @accent;
+    border:              0px 0px 0px 2px;
+    border-color:        @accent2;
+}
+
+element selected.urgent {
+    background-color: @urgent;
+    text-color:         @bg0;
+    border:              0px 0px 0px 2px;
+    border-color:        @urgent;
+}
+
+element selected.active {
+    background-color: @accent2;
+    text-color:         @bg0;
+    border:              0px 0px 0px 2px;
+    border-color:        @accent;
+}
+
+error-message {
+    background-color: @bg0;
+    text-color:         @urgent;
+    border:              2px;
+    border-color:        @urgent;
+    padding:             10px;
+}

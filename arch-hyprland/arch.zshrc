@@ -1,0 +1,306 @@
+# ============================================================
+# Zsh Configuration - Fedora KDE
+# ============================================================
+# Editor: neovim (only)
+# Browser: zen (COPR: scottames/zen-browser) | DE: KDE Plasma
+# Tools required: bat, fzf, zoxide, eza, ripgrep, fd, oh-my-posh, nvm
+#
+# Custom commands:
+#   zi  - zoxide interactive
+#   lt  - eza tree view
+#   ff  - fzf interactive with bat preview
+#   eff - ff with neovim integration
+# ============================================================
+
+# ============================================================
+# 1. Environment
+# ============================================================
+
+export PATH="$HOME/.local/bin:$HOME/bin:$HOME/.opencode/bin:$PATH"
+
+# Default editor: neovim.
+export EDITOR="nvim"
+export VISUAL="$EDITOR"
+export SUDO_EDITOR="$EDITOR"
+
+export BROWSER="brave-origin"
+
+# bat as the pager/colorizer for man pages
+export BAT_THEME="${BAT_THEME:-ansi}"
+export MANROFFOPT="-c"
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+
+export LESS="-R"
+
+# ============================================================
+# 2. History
+# ============================================================
+
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt SHARE_HISTORY
+setopt HIST_REDUCE_BLANKS
+
+# ============================================================
+# 3. Completion
+# ============================================================
+
+autoload -Uz compinit
+
+ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump"
+
+mkdir -p "$ZSH_CACHE_DIR"
+
+# Skip the full rebuild if the dump is already fresh for today.
+if [[ -f "$ZSH_COMPDUMP" && "$(date +%j)" == "$(date -r "$ZSH_COMPDUMP" +%j 2>/dev/null)" ]]; then
+  compinit -C -d "$ZSH_COMPDUMP"
+else
+  compinit -d "$ZSH_COMPDUMP"
+fi
+
+# Compile the dump to bytecode for faster parsing on next start.
+{ [[ -s "$ZSH_COMPDUMP" && (! -s "$ZSH_COMPDUMP.zwc" || "$ZSH_COMPDUMP" -nt "$ZSH_COMPDUMP.zwc") ]] && zcompile "$ZSH_COMPDUMP" } &!
+
+zstyle ':completion:*' rehash true
+zstyle ':completion:*' menu select
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion::complete:*' use-cache yes
+zstyle ':completion::complete:*' cache-path "$ZSH_CACHE_DIR"
+
+zmodload zsh/complist
+
+# ============================================================
+# 4. Key Bindings
+# ============================================================
+
+bindkey -v
+
+# Sync terminal cursor shape with vi mode (foot honors DECSCUSR).
+function zle-keymap-select {
+  case $KEYMAP in
+    vicmd)      print -n '\e[2 q' ;;  # steady block — normal mode
+    viins|main) print -n '\e[6 q' ;;  # steady beam  — insert mode
+  esac
+}
+zle -N zle-keymap-select
+zle-line-init() { zle-keymap-select }
+zle -N zle-line-init
+
+# ESC ESC — toggle sudo on the current command line.
+sudo-command-line() {
+  [[ -z "$BUFFER" ]] && zle up-history
+  [[ "$BUFFER" == sudo\ * ]] && LBUFFER="${LBUFFER#sudo }" || LBUFFER="sudo $LBUFFER"
+}
+zle -N sudo-command-line
+
+bindkey -M emacs '\e\e' sudo-command-line
+bindkey -M viins '\e\e' sudo-command-line
+bindkey -M vicmd '\e\e' sudo-command-line
+
+# History search by prefix.
+bindkey -M emacs '^[[A' history-search-backward
+bindkey -M emacs '^[[B' history-search-forward
+bindkey -M viins '^[[A' history-search-backward
+bindkey -M viins '^[[B' history-search-forward
+
+# ============================================================
+# 5. Prompt
+# ============================================================
+
+eval "$(oh-my-posh init zsh --config "$HOME/akshay.omp.json")"
+
+# ============================================================
+# 6. Shell Integrations
+# ============================================================
+
+# --- NVM ---
+export NVM_DIR="$HOME/.nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+
+# --- fzf ---
+source <(fzf --zsh)
+
+# --- zoxide ---
+eval "$(zoxide init zsh --no-cmd)"
+
+# --- foot terminal (OSC-7 / OSC-133) ---
+# Guarded by TERM so this no-ops cleanly if this rc ever gets sourced under
+# kitty (i3 box) or anything else that isn't foot.
+if [[ $TERM == foot* ]]; then
+  autoload -Uz add-zsh-hook
+
+  # OSC-7: report cwd so Ctrl+Shift+N opens new windows in the same dir.
+  # chpwd fires on ANY directory change - plain cd, the zoxide-wrapped cd()
+  # below, pushd - not just the builtin cd, so this needs no extra wiring.
+  _foot_osc7_pwd() {
+    emulate -L zsh
+    setopt extendedglob
+    local LC_ALL=C
+    printf '\e]7;file://%s%s\e\' $HOST ${PWD//(#m)([^@-Za-z&-;_~])/%${(l:2::0:)$(([##16]#MATCH))}}
+  }
+  _foot_osc7_chpwd() { (( ZSH_SUBSHELL )) || _foot_osc7_pwd }
+  add-zsh-hook chpwd _foot_osc7_chpwd
+  _foot_osc7_pwd  # report once at shell start, before any cd happens
+
+  # OSC-133: prompt-jump markers (Ctrl+Shift+Z / Ctrl+Shift+X).
+  # D closes the previous command's output region, A opens the new prompt -
+  # order matters, D must fire first in the precmd chain.
+  _foot_mark_output_end() {
+    if ! builtin zle; then
+      printf '\e]133;D\e\'
+    fi
+  }
+  _foot_mark_prompt_start() { printf '\e]133;A\e\' }
+  add-zsh-hook precmd _foot_mark_output_end
+  add-zsh-hook precmd _foot_mark_prompt_start
+
+  # OSC-133;C: marks where the next command's output begins. Paired with
+  # the pipe-command-output binding in foot.ini (Ctrl+Shift+g -> wl-copy).
+  _foot_mark_output_start() { printf '\e]133;C\e\' }
+  add-zsh-hook preexec _foot_mark_output_start
+fi
+
+# ============================================================
+# 7. zoxide + cd Integration
+# ============================================================
+# `cd` behaves as normal cd for real paths; any argument that isn't a
+# directory is handed to zoxide's fuzzy matcher instead.
+
+cd() {
+  if (( $# == 0 )); then
+    builtin cd ~ || return
+  elif [[ -d $1 ]]; then
+    builtin cd -- "$1" || return
+  else
+    __zoxide_z "$@" || { echo "cd: no zoxide match for '$*'" >&2; return 1; }
+  fi
+}
+alias zi='__zoxide_zi'  # interactive fuzzy jump via fzf
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias -- -='cd -'
+
+# ============================================================
+# 8. eza (better ls)
+# ============================================================
+
+alias ls='eza --group-directories-first --icons=auto'
+alias ll='eza -lah --group-directories-first --icons=auto --git'
+alias lt='eza --tree --level=2 --long --icons=auto --git -a'
+alias lS='eza -lh --group-directories-first --icons=auto --sort=size --reverse'
+alias lT='eza -lh --group-directories-first --icons=auto --sort=modified --reverse'
+
+# ============================================================
+# 9. fzf + bat + ripgrep + eza Integration
+# ============================================================
+
+# --hidden --follow walks into ~/.cache and friends, which can contain
+# vendored terminfo trees full of dangling symlinks. rg has no flag that
+# suppresses the resulting "No such file or directory" errors (upstream
+# issue #241) — 2>/dev/null is the only reliable fix. The extra globs are
+# just cache/build-dir noise this laptop has no business indexing anyway.
+export FZF_DEFAULT_COMMAND='rg --files --hidden --follow \
+  --glob "!.git/*" --glob "!.cache/*" --glob "!.nvm/*" \
+  --glob "!node_modules/*" --glob "!.venv/*" --glob "!venv/*" \
+  --glob "!__pycache__/*" --glob "!target/*" --glob "!dist/*" \
+  --glob "!build/*" 2>/dev/null'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git \
+  --exclude .cache --exclude .nvm --exclude node_modules \
+  --exclude .venv --exclude venv --exclude __pycache__ \
+  --exclude target 2>/dev/null'
+export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --color=always --icons=auto {}'"
+export FZF_DEFAULT_OPTS="--height=60% --layout=reverse --border --info=inline"
+
+# Fuzzy-find a file, preview with bat. `ff <cmd>` pipes the pick to
+# another command (e.g. `ff rm`); no args prints the path.
+ff() {
+  local file
+  file=$(eval "$FZF_DEFAULT_COMMAND" | fzf --preview 'bat --style=numbers --color=always {}')
+  [[ -z $file ]] && return 1
+  if (( $# > 0 )); then
+    "$@" "$file"
+  else
+    print -r -- "$file"
+  fi
+}
+
+eff() { local f; f=$(ff) && nvim "$f"; }  # fuzzy-find -> neovim
+
+# ============================================================
+# 10. Editors
+# ============================================================
+
+alias vim='nvim'
+alias vi='nvim'
+alias neovim='nvim'
+
+alias zshconfig='nvim ~/.zshrc'
+alias reloadzsh='source ~/.zshrc'
+
+# ============================================================
+# 11. KDE / Desktop
+# ============================================================
+
+alias open='xdg-open'
+alias files='dolphin . &>/dev/null & disown'
+
+clip() {
+  if [[ -p /dev/stdin ]]; then
+    wl-copy && echo "Copied to clipboard" || echo "Error: clipboard write failed"
+  elif [[ -f "$1" ]]; then
+    wl-copy < "$1" && echo "Copied to clipboard" || echo "Error: clipboard write failed"
+  else
+    echo "$*" | wl-copy && echo "Copied to clipboard" || echo "Error: clipboard write failed"
+  fi
+}
+
+# ============================================================
+# 12. Git
+# ============================================================
+
+alias gs='git status'
+alias gl='git log --oneline --graph --all --decorate'
+alias gls='git log --stat'
+alias ga='git add'
+alias gaa='git add .'
+alias gc='git commit -v'
+alias gca='git commit -am'
+alias gcm='git commit -m'
+alias gp='git push'
+alias gpo='git push origin'
+alias gpm='git push origin main'
+alias gff='git fetch --all && git pull'
+alias gco='git checkout'
+alias gb='git branch'
+alias gba='git branch -a'
+alias gbd='git branch -d'
+alias gr='git restore'
+alias grs='git reset'
+alias gcl='git clone'
+alias gm='git merge'
+
+# ============================================================
+# 13. Misc
+# ============================================================
+
+alias grep='grep --color=auto'
+alias rgf='rg --files'
+
+# ============================================================
+# 14. Zsh Plugins
+# ============================================================
+
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Must be loaded last.
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
