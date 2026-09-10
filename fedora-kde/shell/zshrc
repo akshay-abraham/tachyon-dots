@@ -2,7 +2,7 @@
 # Zsh Configuration - Fedora KDE
 # ============================================================
 # Editor: neovim (only)
-# Browser: zen (COPR: scottames/zen-browser) | DE: KDE Plasma
+# Browser: Brave-origin | DE: KDE Plasma
 # Tools required: bat, fzf, zoxide, eza, ripgrep, fd, oh-my-posh, nvm
 #
 # Custom commands:
